@@ -1,0 +1,788 @@
+﻿@{
+    ViewData["Title"] = "CloudCuisine - Smart Restaurant Menu Scanner";
+}
+
+@section Styles {
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        
+        :root {
+            --bg-start: #1a0f2e;
+            --bg-end: #2d1b4e;
+            --purple-deep: #4c2a85;
+            --purple-mid: #6b3fa0;
+            --violet: #8b5cf6;
+            --violet-light: #a78bfa;
+            --accent-glow: #c084fc;
+            --text-primary: #f5f3ff;
+            --text-secondary: #c4b8e0;
+            --text-muted: #8b80a8;
+            --card-bg: rgba(45, 27, 78, 0.4);
+            --card-border: rgba(139, 92, 246, 0.15);
+            --card-border-hover: rgba(139, 92, 246, 0.4);
+        }
+
+        * { box-sizing: border-box; }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, sans-serif;
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+
+            background:
+                radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.22), transparent 32%),
+                radial-gradient(circle at 15% 35%, rgba(76, 42, 133, 0.28), transparent 28%),
+                linear-gradient(180deg, #08030f 0%, #160b2a 45%, #1a0f2e 100%);
+            background-attachment: fixed;
+        }
+
+        body::before,
+        body::after {
+            display: none;
+        }
+
+        .cc-wrap {
+            position: relative;
+            z-index: 1;
+            background: transparent;
+        }
+        
+
+        /* Hero */
+        .cc-hero {
+            padding: 5rem 0 6rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .cc-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 1rem;
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.25);
+            border-radius: 100px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--violet-light);
+            margin-bottom: 1.75rem;
+            letter-spacing: 0.02em;
+        }
+
+        .cc-eyebrow .pulse {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent-glow);
+            box-shadow: 0 0 10px var(--accent-glow);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @@keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .cc-hero h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(2.5rem, 5.5vw, 4.25rem);
+            font-weight: 700;
+            line-height: 1.05;
+            letter-spacing: -0.03em;
+            margin: 0 0 1.5rem;
+        }
+
+        .cc-gradient-text {
+            background: linear-gradient(135deg, #e9d5ff 0%, var(--accent-glow) 50%, var(--violet-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .cc-hero p.lead {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            max-width: 640px;
+            margin: 0 auto 2.5rem;
+            line-height: 1.6;
+            font-weight: 400;
+        }
+
+        /* Buttons */
+        .cc-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            padding: 0.85rem 1.75rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 0.95rem;
+            border-radius: 10px;
+            text-decoration: none;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            white-space: nowrap;
+        }
+
+        .cc-btn-primary {
+            background: linear-gradient(135deg, var(--violet) 0%, var(--purple-mid) 100%);
+            color: #fff;
+            box-shadow: 0 8px 24px rgba(139, 92, 246, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        }
+
+        .cc-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(139, 92, 246, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        .cc-btn-secondary {
+            background: rgba(139, 92, 246, 0.08);
+            color: var(--text-primary);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            backdrop-filter: blur(8px);
+        }
+
+        .cc-btn-secondary:hover {
+            background: rgba(139, 92, 246, 0.18);
+            border-color: rgba(139, 92, 246, 0.5);
+            color: var(--text-primary);
+            transform: translateY(-2px);
+        }
+
+        .cc-btn-google {
+            background: #fff;
+            color: #1a0f2e;
+            box-shadow: 0 8px 24px rgba(255, 255, 255, 0.15);
+        }
+
+        .cc-btn-google:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(255, 255, 255, 0.22);
+            color: #1a0f2e;
+        }
+
+        .cc-cta-row {
+            display: flex;
+            gap: 0.85rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* Hero visual */
+        .cc-hero-preview {
+            margin: 4rem auto 0;
+            max-width: 880px;
+            position: relative;
+        }
+
+        .cc-mockup {
+            background: linear-gradient(180deg, rgba(45, 27, 78, 0.8) 0%, rgba(26, 15, 46, 0.9) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.25);
+            border-radius: 16px;
+            padding: 1.25rem;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(139, 92, 246, 0.1);
+            backdrop-filter: blur(8px);
+        }
+
+        .cc-mockup-header {
+            display: flex;
+            gap: 0.4rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(139, 92, 246, 0.15);
+            margin-bottom: 1rem;
+        }
+
+        .cc-mockup-dot {
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+            background: rgba(139, 92, 246, 0.3);
+        }
+
+        .cc-mockup-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.85rem;
+        }
+
+        .cc-dish-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.85rem 1rem;
+            background: rgba(76, 42, 133, 0.25);
+            border: 1px solid rgba(139, 92, 246, 0.15);
+            border-radius: 10px;
+            font-size: 0.85rem;
+        }
+        .cc-step {
+            position: relative;
+            padding: 2rem 1.75rem;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            height: 100%;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .cc-step:hover {
+            transform: translateY(-4px);
+            border-color: var(--card-border-hover);
+            background: rgba(76, 42, 133, 0.3);
+        }
+
+        .cc-step-wrap {
+            position: relative;
+        }
+
+        .cc-step-num {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.75rem;
+            font-weight: 700;
+            line-height: 1;
+            background: linear-gradient(135deg, var(--violet) 0%, var(--accent-glow) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .cc-step h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.6rem;
+        }
+
+        .cc-step p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .cc-dish-row .name { color: var(--text-secondary); font-weight: 500; }
+        .cc-dish-row .price {
+            color: var(--accent-glow);
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+        }
+
+        /* Sections */
+        .cc-section {
+            padding: 5rem 0;
+            position: relative;
+        }
+
+        .cc-section-head {
+            text-align: center;
+            margin-bottom: 3.5rem;
+        }
+
+        .cc-section-tag {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--violet-light);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin-bottom: 0.75rem;
+        }
+
+        .cc-section h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(1.85rem, 3.5vw, 2.6rem);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.85rem;
+        }
+
+        .cc-section-sub {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            max-width: 560px;
+            margin: 0 auto;
+        }
+
+        /* Feature cards */
+        .cc-feature {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 1.75rem;
+            height: 100%;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cc-feature::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.5), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .cc-feature:hover {
+            transform: translateY(-3px);
+            border-color: var(--card-border-hover);
+            background: rgba(76, 42, 133, 0.3);
+        }
+
+        .cc-feature:hover::before { opacity: 1; }
+
+        .cc-feature-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(192, 132, 252, 0.15) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.25rem;
+            color: var(--accent-glow);
+        }
+
+        .cc-feature h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.55rem;
+            color: var(--text-primary);
+        }
+
+        .cc-feature p {
+            color: var(--text-secondary);
+            font-size: 0.92rem;
+            line-height: 1.55;
+            margin: 0;
+        }
+
+        .cc-step {
+            height: 100%;
+        }
+
+        .cc-step-wrap {
+            position: relative;
+        }
+
+        
+        .cc-step {
+            position: relative;
+            padding: 2rem 1.75rem;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            height: 100%;
+            backdrop-filter: blur(10px);
+        }
+
+        .cc-step-num {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.75rem;
+            font-weight: 700;
+            line-height: 1;
+            background: linear-gradient(135deg, var(--violet) 0%, var(--accent-glow) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .cc-step h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.6rem;
+        }
+
+        .cc-step p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        @@media (min-width: 992px) {
+            .cc-step-wrap {
+                position: relative;
+            }
+        }
+
+        /* Final CTA */
+        .cc-final-cta {
+            margin: 2rem 0 5rem;
+            padding: 3.5rem 2rem;
+            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(76, 42, 133, 0.5) 0%, rgba(139, 92, 246, 0.25) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cc-final-cta::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 0%, rgba(192, 132, 252, 0.2) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .cc-final-cta > * { position: relative; z-index: 1; }
+
+        .cc-final-cta h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(1.75rem, 3vw, 2.4rem);
+            font-weight: 700;
+            margin-bottom: 0.85rem;
+            letter-spacing: -0.02em;
+        }
+
+        .cc-final-cta p {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            margin-bottom: 2rem;
+            max-width: 520px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cc-footer a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin: 0 0.75rem;
+        }
+
+        .cc-footer a:hover { color: var(--violet-light); }
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px) scale(0.96);
+            transition: all 0.6s ease;
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        /* hover effect */
+        .cc-step, .cc-feature {
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .cc-step:hover, .cc-feature:hover {
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(139, 92, 246, 0.35);
+        }
+
+        @@media (max-width: 575px) {
+            .cc-hero { padding: 3rem 0 4rem; }
+            .cc-section { padding: 3.5rem 0; }
+            .cc-mockup-grid { grid-template-columns: 1fr; }
+            .cc-final-cta { padding: 2.5rem 1.25rem; }
+        }
+    </style>
+}
+
+<div class="cc-wrap">
+    <!-- Hero -->
+    <section class="cc-hero">
+        <div class="container">
+            <div class="cc-eyebrow">
+                <span class="pulse"></span>
+                Powered by Google Cloud Vision
+            </div>
+            <h1>
+                Scan any menu.<br>
+                <span class="cc-gradient-text">Find the best dish, instantly.</span>
+            </h1>
+            <p class="lead">
+                Upload a photo of any restaurant menu and let AI extract every dish and price for you.
+                Search, sort, compare, and translate &mdash; all in seconds.
+            </p>
+
+            <div class="cc-cta-row">
+                @if (User.Identity != null && User.Identity.IsAuthenticated)
+                {
+                    <a href="/menu/upload" class="cc-btn cc-btn-primary">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        Upload Menu
+                    </a>
+                    <a href="/catalog" class="cc-btn cc-btn-secondary">
+                        View Catalog
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                            <polyline points="12 5 19 12 12 19"/>
+                        </svg>
+                    </a>
+                }
+                else
+                {
+                    <a href="/auth/login" class="cc-btn cc-btn-google">
+                        <svg width="18" height="18" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                            <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/>
+                            <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/>
+                            <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/>
+                            <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/>
+                        </svg>
+                        Sign in with Google
+                    </a>
+                    <a href="#features" class="cc-btn cc-btn-secondary">
+                        Learn more
+                    </a>
+                }
+            </div>
+
+            <!-- Decorative menu mockup -->
+            <div class="cc-hero-preview d-none d-md-block">
+                <div class="cc-mockup">
+                    <div class="cc-mockup-header">
+                        <span class="cc-mockup-dot"></span>
+                        <span class="cc-mockup-dot"></span>
+                        <span class="cc-mockup-dot"></span>
+                    </div>
+                    <div class="cc-mockup-grid">
+                        <div class="cc-dish-row">
+                            <span class="name">Margherita Pizza</span>
+                            <span class="price">€9.50</span>
+                        </div>
+                        <div class="cc-dish-row">
+                            <span class="name">Carbonara</span>
+                            <span class="price">€11.00</span>
+                        </div>
+                        <div class="cc-dish-row">
+                            <span class="name">Tiramisu</span>
+                            <span class="price">€5.50</span>
+                        </div>
+                        <div class="cc-dish-row">
+                            <span class="name">Bruschetta</span>
+                            <span class="price">€6.00</span>
+                        </div>
+                        <div class="cc-dish-row">
+                            <span class="name">Risotto</span>
+                            <span class="price">€12.50</span>
+                        </div>
+                        <div class="cc-dish-row">
+                            <span class="name">Espresso</span>
+                            <span class="price">€2.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="cc-section" id="features">
+        <div class="container">
+            <div class="cc-section-head">
+                <div class="cc-section-tag">Features</div>
+                <h2>Everything you need to read a menu</h2>
+                <p class="cc-section-sub">
+                    From upload to insight in seconds. Built on cloud infrastructure for reliability and scale.
+                </p>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4">
+                    <div class="cc-feature">
+                        <div class="cc-feature-icon">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" transform="rotate(180 12 12)"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        </div>
+                        <h3>Google OAuth Login</h3>
+                        <p>Secure single-sign-on with your Google account. No passwords to remember, no separate registration step.</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="cc-feature">
+                        <div class="cc-feature-icon">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="17 8 12 3 7 8"/>
+                                <line x1="12" y1="3" x2="12" y2="15"/>
+                            </svg>
+                        </div>
+                        <h3>Menu Image Upload</h3>
+                        <p>Drag, drop or snap a photo of any printed menu. JPEG, PNG, and HEIC supported up to 10&nbsp;MB.</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="cc-feature">
+                        <div class="cc-feature-icon">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2 2 7l10 5 10-5-10-5z"/>
+                                <path d="m2 17 10 5 10-5"/>
+                                <path d="m2 12 10 5 10-5"/>
+                            </svg>
+                        </div>
+                        <h3>AI OCR Extraction</h3>
+                        <p>Google Cloud Vision parses dishes, descriptions, and prices &mdash; even from photos taken at an angle or with mixed fonts.</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="cc-feature">
+                        <div class="cc-feature-icon">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"/>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                            </svg>
+                        </div>
+                        <h3>Search &amp; Compare</h3>
+                        <p>Find any dish across your scanned menus. Sort by cheapest, most expensive, or alphabetically with one click.</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="cc-feature">
+                        <div class="cc-feature-icon">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="m5 8 6 6"/>
+                                <path d="m4 14 6-6 2-3"/>
+                                <path d="M2 5h12"/>
+                                <path d="M7 2h1"/>
+                                <path d="m22 22-5-10-5 10"/>
+                                <path d="M14 18h6"/>
+                            </svg>
+                        </div>
+                        <h3>Instant Translation</h3>
+                        <p>Travelling abroad? Translate any extracted menu item into your language using Google Translate API.</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="cc-feature">
+                        <div class="cc-feature-icon">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17.5 19a4.5 4.5 0 1 0 0-9h-1.8A7 7 0 1 0 4 15.5"/>
+                            </svg>
+                        </div>
+                        <h3>Cloud-Based Architecture</h3>
+                        <p>Built on Google Cloud Storage and Vision API. Reliable, scalable, and accessible from any device with a browser.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How it works -->
+    <section class="cc-section" id="how">
+        <div class="container">
+            <div class="cc-section-head">
+                <div class="cc-section-tag">How it works</div>
+                <h2>From photo to plate, in three steps</h2>
+                <p class="cc-section-sub">
+                    A simple flow designed for diners, travellers, and the curious.
+                </p>
+            </div>
+
+            <div class="row g-4 align-items-stretch">
+                <div class="col-12 col-md-4 cc-step-wrap">
+                    <div class="cc-step h-100">
+                        <span class="cc-step-num">01</span>
+                        <h3>Upload menu photos</h3>
+                        <p>Snap or upload a picture of any printed restaurant menu. The image is securely stored in Google Cloud Storage.</p>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-4 cc-step-wrap">
+                    <div class="cc-step h-100">
+                        <span class="cc-step-num">02</span>
+                        <h3>AI extracts dishes &amp; prices</h3>
+                        <p>Cloud Vision parses the image and turns blurry text into a clean, structured list of items and prices.</p>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-4 cc-step-wrap">
+                    <div class="cc-step h-100">
+                        <span class="cc-step-num">03</span>
+                        <h3>Search, compare, translate</h3>
+                        <p>Browse your catalog of menus, hunt for the cheapest dish, or translate items into the language you actually speak.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Final CTA -->
+    <div class="container">
+        <div class="cc-final-cta">
+            @if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                <h2>Ready to scan your next menu?</h2>
+                <p>Upload a photo and let CloudCuisine handle the rest. Your catalog is just a click away.</p>
+                <div class="cc-cta-row">
+                    <a href="/menu/upload" class="cc-btn cc-btn-primary">Upload Menu</a>
+                    <a href="/catalog" class="cc-btn cc-btn-secondary">View Catalog</a>
+                </div>
+            }
+            else
+            {
+                <h2>Start scanning menus today</h2>
+                <p>Sign in with Google to upload your first menu.</p>
+                <div class="cc-cta-row">
+                    <a href="/auth/login" class="cc-btn cc-btn-google">
+                        <svg width="18" height="18" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                            <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/>
+                            <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/>
+                            <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/>
+                            <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/>
+                        </svg>
+                        Sign in with Google
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const items = document.querySelectorAll(".cc-feature, .cc-step, .cc-mockup, .cc-final-cta");
+
+            items.forEach(el => el.classList.add("reveal"));
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry, i) => {
+                    if (entry.isIntersecting) {
+                        setTimeout(() => {
+                            entry.target.classList.add("visible");
+                        }, i * 120);
+
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.15 });
+
+            items.forEach(el => observer.observe(el));
+        });
+    </script>
+}

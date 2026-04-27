@@ -1,0 +1,1491 @@
+﻿@{
+    ViewData["Title"] = "Upload Menu — CloudCuisine";
+    bool hasMessage  = ViewBag.Message  != null;
+    bool hasImageUrl = ViewBag.ImageUrl != null;
+    bool isSuccess   = hasMessage && ((string)ViewBag.Message).ToLower().Contains("success");
+}
+
+@section Styles {
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── Reset / base ────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+:root {
+    --bg-deep:        #08030f;
+    --bg-base:        #0e0719;
+    --bg-card:        rgba(22, 11, 42, 0.72);
+    --border:         rgba(139, 92, 246, 0.18);
+    --border-hover:   rgba(167, 139, 250, 0.45);
+    --violet:         #8b5cf6;
+    --violet-mid:     #a78bfa;
+    --violet-light:   #c084fc;
+    --text-primary:   #f3eeff;
+    --text-secondary: #b8aad4;
+    --text-muted:     #7264a0;
+    --success:        #4ade80;
+    --error:          #f87171;
+    --radius-card:    18px;
+    --radius-btn:     11px;
+    --radius-input:   12px;
+    --transition:     0.22s cubic-bezier(.4,0,.2,1);
+}
+
+body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ── Ambient background orbs ────────────────────────────── */
+.cc-upload-page {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 4rem 1rem 5rem;
+    overflow: hidden;
+}
+
+.cc-upload-page::before,
+.cc-upload-page::after {
+    content: '';
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+    filter: blur(80px);
+}
+
+.cc-upload-page::before {
+    width: 600px; height: 600px;
+    top: -160px; left: -160px;
+    background: radial-gradient(circle, rgba(139,92,246,0.22) 0%, transparent 70%);
+}
+
+.cc-upload-page::after {
+    width: 500px; height: 500px;
+    bottom: -120px; right: -120px;
+    background: radial-gradient(circle, rgba(192,132,252,0.15) 0%, transparent 70%);
+}
+
+/* ── Page header ─────────────────────────────────────────── */
+.cc-upload-header {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    margin-bottom: 2.25rem;
+    animation: cc-fade-up 0.5s ease both;
+}
+
+.cc-upload-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.35rem 0.9rem;
+    background: rgba(139,92,246,0.1);
+    border: 1px solid rgba(139,92,246,0.22);
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--violet-mid);
+    margin-bottom: 1.1rem;
+}
+
+.cc-upload-eyebrow .dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--violet-light);
+    box-shadow: 0 0 8px var(--violet-light);
+    animation: cc-pulse 2s ease-in-out infinite;
+}
+
+.cc-upload-header h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.08;
+    margin: 0 0 0.75rem;
+    background: linear-gradient(135deg, #e9d5ff 0%, var(--violet-light) 50%, var(--violet-mid) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.cc-upload-header p {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    margin: 0;
+    max-width: 440px;
+}
+
+/* ── Main card ───────────────────────────────────────────── */
+.cc-upload-card {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 540px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    padding: 2.25rem 2.25rem 2rem;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    box-shadow:
+        0 0 0 1px rgba(139,92,246,0.06),
+        0 24px 64px rgba(0,0,0,0.55),
+        inset 0 1px 0 rgba(255,255,255,0.04);
+    animation: cc-fade-up 0.5s 0.1s ease both;
+}
+
+/* subtle top shimmer line */
+.cc-upload-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 10%; right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(192,132,252,0.5), transparent);
+    border-radius: 1px;
+}
+
+/* ── Alert / message banner ──────────────────────────────── */
+.cc-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.9rem 1rem;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+    animation: cc-fade-up 0.3s ease both;
+}
+
+.cc-alert-success {
+    background: rgba(74, 222, 128, 0.1);
+    border: 1px solid rgba(74, 222, 128, 0.3);
+    color: #86efac;
+}
+
+.cc-alert-info {
+    background: rgba(139, 92, 246, 0.1);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    color: var(--violet-mid);
+}
+
+.cc-alert-icon {
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+/* ── Drop-zone / file input ──────────────────────────────── */
+.cc-dropzone {
+    position: relative;
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-input);
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition:
+        border-color var(--transition),
+        background var(--transition),
+        box-shadow var(--transition);
+    background: rgba(139,92,246,0.03);
+    margin-bottom: 1.25rem;
+}
+
+.cc-dropzone:hover,
+.cc-dropzone.cc-dragover {
+    border-color: var(--border-hover);
+    background: rgba(139,92,246,0.07);
+    box-shadow: 0 0 0 4px rgba(139,92,246,0.08);
+}
+
+.cc-dropzone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+}
+
+.cc-dz-icon {
+    width: 52px; height: 52px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(192,132,252,0.12));
+    border: 1px solid rgba(139,92,246,0.25);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    color: var(--violet-mid);
+    transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.cc-dropzone:hover .cc-dz-icon {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(139,92,246,0.25);
+}
+
+.cc-dz-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 0.97rem;
+    color: var(--text-primary);
+    margin: 0 0 0.3rem;
+}
+
+.cc-dz-hint {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.cc-dz-pill {
+    display: inline-block;
+    margin-top: 0.75rem;
+    padding: 0.25rem 0.65rem;
+    background: rgba(139,92,246,0.12);
+    border: 1px solid rgba(139,92,246,0.2);
+    border-radius: 100px;
+    font-size: 0.73rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: var(--violet-mid);
+}
+
+/* ── Selected file name bar ──────────────────────────────── */
+.cc-file-bar {
+    display: none;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.65rem 0.9rem;
+    background: rgba(139,92,246,0.08);
+    border: 1px solid rgba(139,92,246,0.2);
+    border-radius: 10px;
+    margin-bottom: 1.25rem;
+    animation: cc-fade-up 0.25s ease both;
+}
+
+.cc-file-bar.cc-visible { display: flex; }
+
+.cc-file-bar-icon { color: var(--violet-mid); flex-shrink: 0; }
+
+.cc-file-bar-name {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cc-file-bar-clear {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: color var(--transition);
+    display: flex;
+    align-items: center;
+}
+
+.cc-file-bar-clear:hover { color: var(--error); }
+
+/* ── Image preview ───────────────────────────────────────── */
+.cc-preview-wrap {
+    display: none;
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    margin-bottom: 1.25rem;
+    background: rgba(0,0,0,0.3);
+}
+
+.cc-preview-wrap.cc-visible {
+    display: block;
+    animation: cc-fade-in 0.35s ease both;
+}
+
+.cc-preview-wrap img {
+    width: 100%;
+    max-height: 280px;
+    object-fit: contain;
+    display: block;
+}
+
+.cc-preview-badge {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.6rem;
+    padding: 0.25rem 0.65rem;
+    background: rgba(26,15,46,0.85);
+    border: 1px solid rgba(139,92,246,0.3);
+    border-radius: 100px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--violet-mid);
+    backdrop-filter: blur(6px);
+}
+
+/* ── Upload button ───────────────────────────────────────── */
+.cc-upload-btn {
+    width: 100%;
+    padding: 0.85rem 1.5rem;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 0.97rem;
+    letter-spacing: 0.01em;
+    color: #fff;
+    background: linear-gradient(135deg, var(--violet) 0%, #6d28d9 100%);
+    border: none;
+    border-radius: var(--radius-btn);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    transition: all var(--transition);
+    box-shadow:
+        0 8px 24px rgba(139,92,246,0.35),
+        inset 0 1px 0 rgba(255,255,255,0.12);
+    position: relative;
+    overflow: hidden;
+}
+
+.cc-upload-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+.cc-upload-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow:
+        0 14px 32px rgba(139,92,246,0.5),
+        inset 0 1px 0 rgba(255,255,255,0.15);
+}
+
+.cc-upload-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.cc-upload-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* loading spinner on submit */
+.cc-upload-btn .cc-spinner {
+    display: none;
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: cc-spin 0.7s linear infinite;
+}
+
+.cc-upload-btn.cc-loading .cc-spinner { display: block; }
+.cc-upload-btn.cc-loading .cc-btn-text { opacity: 0.6; }
+
+/* ── Result card (after upload) ──────────────────────────── */
+.cc-result-card {
+    width: 100%;
+    max-width: 540px;
+    position: relative;
+    z-index: 1;
+    margin-top: 1.5rem;
+    background: rgba(16, 8, 32, 0.7);
+    border: 1px solid rgba(74, 222, 128, 0.2);
+    border-radius: var(--radius-card);
+    padding: 1.5rem;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 16px 48px rgba(0,0,0,0.45);
+    animation: cc-fade-up 0.5s 0.15s ease both;
+}
+
+.cc-result-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 10%; right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(74,222,128,0.4), transparent);
+}
+
+.cc-result-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.1rem;
+}
+
+.cc-result-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: rgba(74,222,128,0.12);
+    border: 1px solid rgba(74,222,128,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #4ade80;
+    flex-shrink: 0;
+}
+
+.cc-result-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #86efac;
+    margin: 0;
+}
+
+.cc-result-img-wrap {
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid rgba(139,92,246,0.2);
+    margin-bottom: 1rem;
+    background: rgba(0,0,0,0.3);
+}
+
+.cc-result-img-wrap img {
+    width: 100%;
+    max-height: 320px;
+    object-fit: contain;
+    display: block;
+}
+
+.cc-result-url-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 0.4rem;
+}
+
+.cc-result-url-box {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 0.55rem 0.75rem;
+}
+
+.cc-result-url-text {
+    flex: 1;
+    font-size: 0.78rem;
+    color: var(--violet-mid);
+    font-family: 'Courier New', monospace;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    word-break: break-all;
+}
+
+.cc-copy-btn {
+    background: rgba(139,92,246,0.15);
+    border: 1px solid rgba(139,92,246,0.25);
+    color: var(--violet-mid);
+    border-radius: 7px;
+    padding: 0.3rem 0.65rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition);
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.cc-copy-btn:hover {
+    background: rgba(139,92,246,0.28);
+    border-color: rgba(167,139,250,0.45);
+    color: var(--violet-light);
+}
+
+/* ── Keyframes ───────────────────────────────────────────── */
+@@keyframes cc-fade-up {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@@keyframes cc-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@@keyframes cc-pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.45; }
+}
+
+@@keyframes cc-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@@media (max-width: 575px) {
+    .cc-upload-page    { padding: 2.5rem 0.75rem 4rem; }
+    .cc-upload-card    { padding: 1.5rem 1.25rem; }
+    .cc-upload-header h1 { font-size: 1.75rem; }
+}
+
+.cc-restaurant-input {
+    width: 100%;
+    margin-bottom: 1.25rem;
+}
+
+.cc-restaurant-input label {
+    display: block;
+    margin-bottom: 0.45rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--violet-mid);
+}
+
+.cc-restaurant-input input {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    border-radius: var(--radius-input);
+    border: 1px solid rgba(139, 92, 246, 0.26);
+    background: rgba(8, 3, 15, 0.55);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    outline: none;
+    transition: all var(--transition);
+}
+
+.cc-restaurant-input input::placeholder {
+    color: var(--text-muted);
+}
+
+.cc-restaurant-input input:focus {
+    border-color: var(--violet-mid);
+    box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.12);
+    background: rgba(16, 8, 32, 0.8);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RESULT SECTION
+   ═══════════════════════════════════════════════════════════ */
+
+.cc-results {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 720px;
+    margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    animation: cc-fade-up 0.5s 0.15s ease both;
+}
+
+/* shared glass panel */
+.cc-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    box-shadow:
+        0 0 0 1px rgba(139,92,246,0.05),
+        0 20px 56px rgba(0,0,0,0.5),
+        inset 0 1px 0 rgba(255,255,255,0.04);
+    overflow: hidden;
+    position: relative;
+}
+
+.cc-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 10%; right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(192,132,252,0.4), transparent);
+    pointer-events: none;
+}
+
+.cc-panel-body { padding: 1.5rem 1.75rem; }
+
+/* status banner */
+.cc-status-banner {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.1rem 1.5rem;
+    background: linear-gradient(90deg,
+        rgba(74,222,128,0.08) 0%,
+        rgba(74,222,128,0.02) 100%);
+    border-bottom: 1px solid rgba(74,222,128,0.14);
+}
+
+.cc-status-icon {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    background: rgba(74,222,128,0.12);
+    border: 1px solid rgba(74,222,128,0.28);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--success);
+    flex-shrink: 0;
+}
+
+.cc-status-text h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #86efac;
+    margin: 0 0 0.1rem;
+}
+
+.cc-status-text p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+/* restaurant meta row */
+.cc-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.85rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    background: rgba(139,92,246,0.04);
+}
+
+.cc-meta-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.cc-meta-dot {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: rgba(139,92,246,0.4);
+    flex-shrink: 0;
+}
+
+.cc-meta-value {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.97rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* uploaded image */
+.cc-result-img {
+    width: 100%;
+    display: block;
+    max-height: 340px;
+    object-fit: contain;
+    background: rgba(0,0,0,0.25);
+}
+
+/* panel heading row */
+.cc-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.cc-panel-title {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.cc-panel-title-icon {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    background: rgba(139,92,246,0.15);
+    border: 1px solid rgba(139,92,246,0.22);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--violet-mid);
+    flex-shrink: 0;
+}
+
+.cc-badge-count {
+    padding: 0.15rem 0.55rem;
+    background: rgba(139,92,246,0.18);
+    border: 1px solid rgba(139,92,246,0.25);
+    border-radius: 100px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--violet-mid);
+}
+
+/* collapse toggle button */
+.cc-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.28rem 0.7rem;
+    background: rgba(139,92,246,0.08);
+    border: 1px solid rgba(139,92,246,0.2);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: 0.76rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+    font-family: 'Inter', sans-serif;
+    white-space: nowrap;
+}
+
+.cc-toggle-btn:hover {
+    background: rgba(139,92,246,0.16);
+    border-color: var(--border-hover);
+    color: var(--text-primary);
+}
+
+.cc-toggle-btn svg { transition: transform var(--transition); }
+.cc-toggle-btn[aria-expanded="true"] svg { transform: rotate(180deg); }
+
+/* OCR pre */
+.cc-ocr-pre {
+    margin: 0;
+    padding: 1rem 1.1rem;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.78rem;
+    line-height: 1.7;
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 240px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(139,92,246,0.3) transparent;
+}
+
+.cc-ocr-pre::-webkit-scrollbar { width: 5px; }
+.cc-ocr-pre::-webkit-scrollbar-thumb {
+    background: rgba(139,92,246,0.3);
+    border-radius: 3px;
+}
+
+/* menu items grid */
+.cc-menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 0.75rem;
+}
+
+.cc-menu-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    padding: 0.95rem 1rem;
+    background: rgba(139,92,246,0.06);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    transition: all var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.cc-menu-item::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--violet), var(--violet-light));
+    opacity: 0;
+    transition: opacity var(--transition);
+}
+
+.cc-menu-item:hover {
+    border-color: rgba(139,92,246,0.35);
+    background: rgba(139,92,246,0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+
+.cc-menu-item:hover::before { opacity: 1; }
+
+.cc-item-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.35;
+}
+
+.cc-item-price {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.22rem 0.6rem;
+    background: rgba(192,132,252,0.12);
+    border: 1px solid rgba(192,132,252,0.25);
+    border-radius: 100px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--violet-light);
+    align-self: flex-start;
+}
+
+/* empty state */
+.cc-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    gap: 0.65rem;
+}
+
+.cc-empty-icon {
+    width: 50px; height: 50px;
+    border-radius: 14px;
+    background: rgba(139,92,246,0.08);
+    border: 1px solid rgba(139,92,246,0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    margin-bottom: 0.15rem;
+}
+
+.cc-empty-state h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.cc-empty-state p {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin: 0;
+    max-width: 280px;
+    line-height: 1.55;
+}
+
+/* debug / URL strip */
+.cc-debug-trigger {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    background: none;
+    border: none;
+    border-top: 1px solid var(--border);
+    padding: 0.7rem 1.75rem;
+    color: var(--text-muted);
+    font-size: 0.76rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+    transition: color var(--transition);
+    font-family: 'Inter', sans-serif;
+}
+
+.cc-debug-trigger:hover { color: var(--text-secondary); }
+
+.cc-debug-trigger svg {
+    margin-left: auto;
+    transition: transform var(--transition);
+}
+
+.cc-debug-trigger[aria-expanded="true"] svg { transform: rotate(180deg); }
+
+.cc-debug-body {
+    padding: 0 1.75rem 1.1rem;
+}
+
+.cc-url-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 0.5rem 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.cc-url-text {
+    flex: 1;
+    font-family: 'Courier New', monospace;
+    font-size: 0.72rem;
+    color: var(--violet-mid);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cc-copy-btn {
+    background: rgba(139,92,246,0.15);
+    border: 1px solid rgba(139,92,246,0.25);
+    color: var(--violet-mid);
+    border-radius: 7px;
+    padding: 0.28rem 0.6rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition);
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-family: 'Inter', sans-serif;
+}
+
+.cc-copy-btn:hover {
+    background: rgba(139,92,246,0.28);
+    border-color: var(--border-hover);
+    color: var(--violet-light);
+}
+
+@@media (max-width: 575px) {
+    .cc-results    { max-width: 100%; }
+    .cc-panel-body { padding: 1.1rem; }
+    .cc-menu-grid  { grid-template-columns: 1fr 1fr; }
+    .cc-debug-trigger, .cc-debug-body { padding-left: 1.1rem; padding-right: 1.1rem; }
+}
+
+@@media (max-width: 380px) {
+    .cc-menu-grid { grid-template-columns: 1fr; }
+}
+
+.cc-progress-wrap {
+    display: none;
+    margin-top: 1rem;
+}
+
+.cc-progress-wrap.cc-visible {
+    display: block;
+}
+
+.cc-progress-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.45rem;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.cc-progress-track {
+    height: 10px;
+    background: rgba(8, 3, 15, 0.6);
+    border: 1px solid rgba(139, 92, 246, 0.25);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.cc-progress-bar {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, var(--violet), var(--violet-light));
+    border-radius: inherit;
+    transition: width 0.2s ease;
+}
+</style>
+}
+
+<div class="cc-upload-page">
+
+    <!-- Header -->
+    <div class="cc-upload-header">
+        <div class="cc-upload-eyebrow">
+            <span class="dot"></span>
+            Cloud Storage Upload
+        </div>
+        <h1>Upload Menu</h1>
+        <p>Snap or select a restaurant menu photo — CloudCuisine will extract every dish and price automatically.</p>
+    </div>
+
+    <!-- Upload card -->
+    <div class="cc-upload-card">
+
+        @* ── Status message ── *@
+        @if (hasMessage)
+        {
+            <div class="cc-alert @(isSuccess ? "cc-alert-success" : "cc-alert-info")">
+                <span class="cc-alert-icon">
+                    @if (isSuccess)
+                    {
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2.5"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                    }
+                    else
+                    {
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2.5"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="8" x2="12" y2="12"/>
+                            <line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                    }
+                </span>
+                @ViewBag.Message
+            </div>
+        }
+
+        @* ── Form ── *@
+        <form asp-controller="Menu" asp-action="Upload"
+              method="post"
+              enctype="multipart/form-data"
+              id="ccUploadForm">
+            
+            <div class="cc-restaurant-input">
+                <label for="restaurantName">Restaurant name</label>
+                <input 
+                    type="text" 
+                    id="restaurantName"
+                    name="restaurantName" 
+                    placeholder="e.g. Bella Italia" 
+                    required />
+            </div>
+
+            @* Drop-zone *@
+            <div class="cc-dropzone" id="ccDropzone">
+                <input type="file"
+                       name="files"
+                       id="ccFileInput"
+                       accept=".jpg,.jpeg,.png,.gif"
+                       multiple />
+                <div class="cc-dz-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.8"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                </div>
+                <p class="cc-dz-title">Drop your menu photos here</p>
+                <p class="cc-dz-hint">or click to browse from your device</p>
+                <span class="cc-dz-pill">JPG · PNG · GIF</span>
+            </div>
+
+            @* Selected file name bar *@
+            <div class="cc-file-bar" id="ccFileBar">
+                <span class="cc-file-bar-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                </span>
+                <span class="cc-file-bar-name" id="ccFileName">No file selected</span>
+                <button type="button" class="cc-file-bar-clear" id="ccClearBtn" aria-label="Clear selection">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2.5"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            
+
+            @* Submit *@
+            <button type="submit" class="cc-upload-btn" id="ccSubmitBtn">
+                <span class="cc-spinner"></span>
+                <svg class="cc-btn-icon" width="17" height="17" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2.2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17.5 19a4.5 4.5 0 1 0 0-9h-1.8A7 7 0 1 0 4 15.5"/>
+                    <polyline points="16 13 12 9 8 13"/>
+                    <line x1="12" y1="9" x2="12" y2="21"/>
+                </svg>
+                <span class="cc-btn-text">Upload to CloudCuisine</span>
+            </button>
+            <div class="cc-progress-wrap" id="ccProgressWrap">
+                <div class="cc-progress-meta">
+                    <span id="ccProgressLabel">Uploading...</span>
+                    <span id="ccProgressText">0%</span>
+                </div>
+                <div class="cc-progress-track">
+                    <div class="cc-progress-bar" id="ccProgressBar"></div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    @* ══════════════════════════════════════════
+       RESULT SECTION
+       ══════════════════════════════════════════ *@
+    @if (hasImageUrl)
+    {
+        var restaurantName = (string?)Context.Request.Form["restaurantName"];
+        var hasParsed      = ViewBag.ParsedItems != null;
+        var hasOcr         = ViewBag.OcrText     != null;
+        int itemCount      = hasParsed ? System.Linq.Enumerable.Count(ViewBag.ParsedItems) : 0;
+
+        <div class="cc-results">
+
+            @* ── Card 1: Status + image ── *@
+            <div class="cc-panel">
+
+                @* Status banner *@
+                <div class="cc-status-banner">
+                    <div class="cc-status-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2.5"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                    </div>
+                    <div class="cc-status-text">
+                        <h2>Upload complete</h2>
+                        <p>Image stored · OCR processed · Menu parsed</p>
+                    </div>
+                </div>
+
+                @* Restaurant name row *@
+                @if (!string.IsNullOrWhiteSpace(restaurantName))
+                {
+                    <div class="cc-meta-row">
+                        <span class="cc-meta-label">Restaurant</span>
+                        <span class="cc-meta-dot"></span>
+                        <span class="cc-meta-value">@restaurantName</span>
+                    </div>
+                }
+            </div>
+
+            @* ── Card 2: Parsed menu items ── *@
+            <div class="cc-panel">
+                <div class="cc-panel-body">
+                    <div class="cc-panel-head">
+                        <div class="cc-panel-title">
+                            <div class="cc-panel-title-icon">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                     stroke="currentColor" stroke-width="2"
+                                     stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                                </svg>
+                            </div>
+                            Parsed Menu
+                            @if (hasParsed && itemCount > 0)
+                            {
+                                <span class="cc-badge-count">@itemCount items</span>
+                            }
+                        </div>
+                    </div>
+
+                    @if (hasParsed && itemCount > 0)
+                    {
+                        <div class="cc-menu-grid">
+                            @foreach (var item in ViewBag.ParsedItems)
+                            {
+                                <div class="cc-menu-item">
+                                    <span class="cc-item-name">@item.Name</span>
+                                    <span class="cc-item-price">€@item.Price</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="cc-empty-state">
+                            <div class="cc-empty-icon">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                                     stroke="currentColor" stroke-width="1.8"
+                                     stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="8"/>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                                </svg>
+                            </div>
+                            <h3>No menu items found</h3>
+                            <p>The parser couldn't extract any dishes from this image. Try a clearer photo with better lighting.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            @* ── Card 3: OCR text (collapsible) ── *@
+            @if (hasOcr)
+            {
+                <div class="cc-panel">
+                    <div class="cc-panel-body">
+                        <div class="cc-panel-head">
+                            <div class="cc-panel-title">
+                                <div class="cc-panel-title-icon">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                         stroke="currentColor" stroke-width="2"
+                                         stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="4 7 4 4 20 4 20 7"/>
+                                        <line x1="9" y1="20" x2="15" y2="20"/>
+                                        <line x1="12" y1="4" x2="12" y2="20"/>
+                                    </svg>
+                                </div>
+                                Raw OCR Text
+                            </div>
+                            <button class="cc-toggle-btn"
+                                    type="button"
+                                    id="ccOcrToggle"
+                                    aria-expanded="false"
+                                    aria-controls="ccOcrBody">
+                                <span id="toggle-text">Show</span>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                                     stroke="currentColor" stroke-width="2.5"
+                                     stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="6 9 12 15 18 9"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <div id="ccOcrBody" style="display:none;">
+                            <pre class="cc-ocr-pre">@ViewBag.OcrText</pre>
+                        </div>
+                    </div>
+                </div>
+            }
+
+        </div>
+    }
+
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    const fileInput   = document.getElementById('ccFileInput');
+    const dropzone    = document.getElementById('ccDropzone');
+    const fileBar     = document.getElementById('ccFileBar');
+    const fileName    = document.getElementById('ccFileName');
+    const clearBtn    = document.getElementById('ccClearBtn');
+    const previewWrap = document.getElementById('ccPreviewWrap');
+    const previewImg  = document.getElementById('ccPreviewImg');
+    const submitBtn   = document.getElementById('ccSubmitBtn');
+    const form        = document.getElementById('ccUploadForm');
+
+    /* ── File selection handler ── */
+    function handleFiles(files) {
+        if (!files || files.length === 0) return;
+
+        fileName.textContent = files.length === 1
+            ? files[0].name
+            : `${files.length} files selected`;
+        
+        fileBar.classList.add('cc-visible');
+
+        // Image preview
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                previewImg.src = e.target.result;
+                previewWrap.classList.add('cc-visible');
+            };
+            reader.readAsDataURL(file);
+        } else {
+            previewWrap.classList.remove('cc-visible');
+            previewImg.src = '';
+        }
+    }
+
+    /* ── Clear selection ── */
+    function clearSelection() {
+        fileInput.value = '';
+        fileBar.classList.remove('cc-visible');
+        previewWrap.classList.remove('cc-visible');
+        previewImg.src = '';
+        fileName.textContent = 'No file selected';
+    }
+    
+    fileInput.addEventListener('change', function () {
+        handleFiles(this.files);
+    });
+
+    clearBtn.addEventListener('click', clearSelection);
+
+    /* ── Drag-and-drop ── */
+    ;['dragenter', 'dragover'].forEach(function (evt) {
+        dropzone.addEventListener(evt, function (e) {
+            e.preventDefault();
+            dropzone.classList.add('cc-dragover');
+        });
+    });
+
+    ;['dragleave', 'drop'].forEach(function (evt) {
+        dropzone.addEventListener(evt, function (e) {
+            e.preventDefault();
+            dropzone.classList.remove('cc-dragover');
+        });
+    });
+
+    dropzone.addEventListener('drop', function (e) {
+        const files = e.dataTransfer.files;
+        if (file) {
+            // Assign to the real input so the form picks it up
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            fileInput.files = dt.files;
+            handleFile(file);
+        }
+    });
+
+    const restaurantInput = document.getElementById('restaurantName');
+
+    const progressWrap = document.getElementById('ccProgressWrap');
+    const progressBar = document.getElementById('ccProgressBar');
+    const progressText = document.getElementById('ccProgressText');
+    const progressLabel = document.getElementById('ccProgressLabel');
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        if (!fileInput.files || fileInput.files.length === 0 || !restaurantInput.value.trim()) {
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('restaurantName', restaurantInput.value.trim());
+
+        for (const file of fileInput.files) {
+            formData.append('files', file);
+        }
+
+        submitBtn.classList.add('cc-loading');
+        submitBtn.disabled = true;
+
+        progressWrap.classList.add('cc-visible');
+        progressBar.style.width = '0%';
+        progressText.textContent = '0%';
+        progressLabel.textContent = 'Uploading files...';
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', form.action || '/Menu/Upload', true);
+
+        xhr.upload.onprogress = function (event) {
+            if (!event.lengthComputable) return;
+
+            const percent = Math.round((event.loaded / event.total) * 100);
+            progressBar.style.width = percent + '%';
+            progressText.textContent = percent + '%';
+
+            if (percent >= 100) {
+                progressText.textContent = "Uploaded";
+                progressLabel.textContent = "Processing image, OCR, and Firestore...";
+            }
+        };
+
+        xhr.onload = function () {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                progressBar.style.width = '100%';
+                progressText.textContent = '100%';
+                progressLabel.textContent = 'Complete. Refreshing...';
+
+                document.open();
+                document.write(xhr.responseText);
+                document.close();
+            } else {
+                progressLabel.textContent = 'Upload failed.';
+                submitBtn.classList.remove('cc-loading');
+                submitBtn.disabled = false;
+            }
+        };
+
+        xhr.onerror = function () {
+            progressLabel.textContent = 'Upload failed.';
+            submitBtn.classList.remove('cc-loading');
+            submitBtn.disabled = false;
+        };
+
+        xhr.send(formData);
+    });
+
+    /* ── Copy URL button ── */
+    const copyBtn   = document.getElementById('ccCopyBtn');
+    const resultUrl = document.getElementById('ccResultUrl');
+
+    if (copyBtn && resultUrl) {
+        copyBtn.addEventListener('click', function () {
+            navigator.clipboard.writeText(resultUrl.textContent.trim()).then(function () {
+                copyBtn.textContent = '✓ Copied';
+                copyBtn.style.color = '#4ade80';
+                copyBtn.style.borderColor = 'rgba(74,222,128,0.4)';
+                setTimeout(function () {
+                    copyBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2.2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                    </svg> Copy`;
+                    copyBtn.style.color = '';
+                    copyBtn.style.borderColor = '';
+                }, 2000);
+            });
+        });
+    }
+
+    /* ── OCR collapse toggle ── */
+    const ocrToggle = document.getElementById('ccOcrToggle');
+    const ocrBody   = document.getElementById('ccOcrBody');
+
+    if (ocrToggle && ocrBody) {
+        ocrToggle.addEventListener('click', function () {
+            const open = ocrBody.style.display !== 'none';
+            ocrBody.style.display   = open ? 'none' : 'block';
+            ocrToggle.setAttribute('aria-expanded', String(!open));
+            ocrToggle.childNodes.forEach(function(n) {
+                if (n.nodeType === Node.TEXT_NODE) {
+                    document.getElementById('toggle-text').textContent = open ? 'Show' : 'Hide';
+                }
+            });
+        });
+    }
+
+    /* ── Debug / storage URL collapse ── */
+    const debugTrigger = document.getElementById('ccDebugTrigger');
+    const debugBody    = document.getElementById('ccDebugBody');
+
+    if (debugTrigger && debugBody) {
+        debugTrigger.addEventListener('click', function () {
+            const open = debugBody.style.display !== 'none';
+            debugBody.style.display = open ? 'none' : 'block';
+            debugTrigger.setAttribute('aria-expanded', String(!open));
+        });
+    }
+    document.getElementById('restaurantName')?.focus();
+
+}());
+</script>
+}

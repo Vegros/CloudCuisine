@@ -1,0 +1,751 @@
+﻿@model List<mattias_tonna_swd63a_pftc.Models.CatalogItem>
+@using System.Globalization
+
+@{
+ViewData["Title"] = "Menu Catalog — CloudCuisine";
+bool isEmpty = Model == null || Model.Count == 0;
+}
+
+@section Styles {
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+/* ── Reset ───────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+:root {
+    --bg-deep:        #08030f;
+    --bg-base:        #0e0719;
+    --bg-card:        rgba(22, 11, 42, 0.72);
+    --bg-card-hover:  rgba(34, 16, 62, 0.85);
+    --border:         rgba(139, 92, 246, 0.18);
+    --border-hover:   rgba(167, 139, 250, 0.42);
+    --violet:         #8b5cf6;
+    --violet-mid:     #a78bfa;
+    --violet-light:   #c084fc;
+    --text-primary:   #f3eeff;
+    --text-secondary: #b8aad4;
+    --text-muted:     #7264a0;
+    --success:        #4ade80;
+    --radius-card:    16px;
+    --radius-input:   11px;
+    --transition:     0.22s cubic-bezier(.4,0,.2,1);
+}
+
+body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ── Page shell ──────────────────────────────────────────── */
+.cc-catalog-page {
+    position: relative;
+    min-height: 100vh;
+    padding: 3.5rem 1rem 5rem;
+    overflow-x: hidden;
+}
+
+/* ambient orbs */
+.cc-catalog-page::before,
+.cc-catalog-page::after {
+    content: '';
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+    filter: blur(90px);
+}
+
+.cc-catalog-page::before {
+    width: 640px; height: 640px;
+    top: -180px; left: -160px;
+    background: radial-gradient(circle, rgba(139,92,246,0.2) 0%, transparent 70%);
+}
+
+.cc-catalog-page::after {
+    width: 520px; height: 520px;
+    bottom: -140px; right: -140px;
+    background: radial-gradient(circle, rgba(192,132,252,0.13) 0%, transparent 70%);
+}
+
+.cc-catalog-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 1160px;
+    margin: 0 auto;
+}
+
+/* ── Page header ─────────────────────────────────────────── */
+.cc-page-header {
+    margin-bottom: 2.5rem;
+    animation: cc-fade-up 0.45s ease both;
+}
+
+.cc-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.32rem 0.9rem;
+    background: rgba(139,92,246,0.1);
+    border: 1px solid rgba(139,92,246,0.22);
+    border-radius: 100px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--violet-mid);
+    margin-bottom: 1rem;
+}
+
+.cc-eyebrow-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--violet-light);
+    box-shadow: 0 0 8px var(--violet-light);
+    animation: cc-pulse 2s ease-in-out infinite;
+}
+
+.cc-page-header h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(1.9rem, 4vw, 2.9rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.08;
+    margin: 0 0 0.6rem;
+    background: linear-gradient(135deg, #e9d5ff 0%, var(--violet-light) 50%, var(--violet-mid) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.cc-page-header p {
+    color: var(--text-secondary);
+    font-size: 0.97rem;
+    margin: 0;
+    max-width: 520px;
+    line-height: 1.55;
+}
+
+/* ── Stats bar ───────────────────────────────────────────── */
+.cc-stats-bar {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+    flex-wrap: wrap;
+    animation: cc-fade-up 0.45s 0.05s ease both;
+}
+
+.cc-stat {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.5rem 0.9rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    backdrop-filter: blur(10px);
+}
+
+.cc-stat-num {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.cc-stat-label {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* ── Toolbar (search + sort) ─────────────────────────────── */
+.cc-toolbar {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.75rem;
+    flex-wrap: wrap;
+    align-items: center;
+    animation: cc-fade-up 0.45s 0.1s ease both;
+}
+
+/* search wrapper */
+.cc-search-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 220px;
+}
+
+.cc-search-icon {
+    position: absolute;
+    left: 0.9rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+    display: flex;
+}
+
+.cc-search-input {
+    width: 100%;
+    padding: 0.72rem 1rem 0.72rem 2.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-input);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    outline: none;
+    transition: all var(--transition);
+    backdrop-filter: blur(10px);
+}
+
+.cc-search-input::placeholder { color: var(--text-muted); }
+
+.cc-search-input:focus {
+    border-color: var(--violet-mid);
+    box-shadow: 0 0 0 4px rgba(139,92,246,0.12);
+    background: rgba(16,8,32,0.85);
+}
+
+/* clear button inside search */
+.cc-search-clear {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.2rem;
+    display: none;
+    align-items: center;
+    transition: color var(--transition);
+    border-radius: 4px;
+}
+
+.cc-search-clear:hover { color: var(--text-primary); }
+.cc-search-clear.cc-visible { display: flex; }
+
+/* sort select */
+.cc-sort-wrap { position: relative; }
+
+.cc-sort-icon {
+    position: absolute;
+    left: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+    display: flex;
+}
+
+.cc-sort-select {
+    padding: 0.72rem 2.4rem 0.72rem 2.4rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-input);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 500;
+    outline: none;
+    cursor: pointer;
+    transition: all var(--transition);
+    backdrop-filter: blur(10px);
+    appearance: none;
+    -webkit-appearance: none;
+    min-width: 190px;
+}
+
+.cc-sort-select:focus {
+    border-color: var(--violet-mid);
+    box-shadow: 0 0 0 4px rgba(139,92,246,0.12);
+}
+
+.cc-sort-caret {
+    position: absolute;
+    right: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+    display: flex;
+}
+
+/* result count badge */
+.cc-result-count {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    white-space: nowrap;
+    padding: 0 0.25rem;
+}
+
+/* ── Items grid ──────────────────────────────────────────── */
+.cc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 1rem;
+    animation: cc-fade-up 0.45s 0.15s ease both;
+}
+
+/* individual item card */
+.cc-item-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    padding: 1.25rem 1.35rem 1.15rem;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    transition: all var(--transition);
+    position: relative;
+    overflow: hidden;
+    cursor: default;
+    box-shadow:
+        0 0 0 1px rgba(139,92,246,0.04),
+        0 8px 28px rgba(0,0,0,0.35);
+}
+
+/* top shimmer line — visible on hover */
+.cc-item-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--violet), var(--violet-light), transparent);
+    opacity: 0;
+    transition: opacity var(--transition);
+}
+
+.cc-item-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--border-hover);
+    background: var(--bg-card-hover);
+    box-shadow:
+        0 0 0 1px rgba(139,92,246,0.1),
+        0 16px 48px rgba(0,0,0,0.5),
+        0 0 30px rgba(139,92,246,0.08);
+}
+
+.cc-item-card:hover::before { opacity: 1; }
+
+/* restaurant pill */
+.cc-card-restaurant {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.22rem 0.65rem;
+    background: rgba(139,92,246,0.1);
+    border: 1px solid rgba(139,92,246,0.2);
+    border-radius: 100px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--violet-mid);
+    letter-spacing: 0.01em;
+    margin-bottom: 0.75rem;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cc-card-restaurant svg { flex-shrink: 0; }
+
+/* dish name */
+.cc-card-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.3;
+    margin-bottom: 0.85rem;
+    /* highlight matched search text */
+}
+
+.cc-card-name mark {
+    background: rgba(192,132,252,0.25);
+    color: var(--violet-light);
+    border-radius: 3px;
+    padding: 0 2px;
+}
+
+/* price + footer row */
+.cc-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.cc-price-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.15rem;
+    padding: 0.3rem 0.75rem;
+    background: rgba(192,132,252,0.13);
+    border: 1px solid rgba(192,132,252,0.28);
+    border-radius: 100px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--violet-light);
+}
+
+.cc-price-currency {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--violet-mid);
+    margin-right: 1px;
+    opacity: 0.8;
+}
+
+/* ── No-results state ────────────────────────────────────── */
+.cc-no-results {
+    display: none;           /* shown via JS */
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    text-align: center;
+    gap: 0.75rem;
+    grid-column: 1 / -1;
+}
+
+.cc-no-results.cc-visible { display: flex; }
+
+.cc-no-results-icon {
+    width: 60px; height: 60px;
+    border-radius: 16px;
+    background: rgba(139,92,246,0.08);
+    border: 1px solid rgba(139,92,246,0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+}
+
+.cc-no-results h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.cc-no-results p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin: 0;
+    max-width: 300px;
+    line-height: 1.55;
+}
+
+.cc-no-results-clear {
+    margin-top: 0.25rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1.1rem;
+    background: rgba(139,92,246,0.1);
+    border: 1px solid rgba(139,92,246,0.25);
+    border-radius: 9px;
+    color: var(--violet-mid);
+    font-size: 0.84rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+    font-family: 'Inter', sans-serif;
+}
+
+.cc-no-results-clear:hover {
+    background: rgba(139,92,246,0.18);
+    border-color: var(--border-hover);
+    color: var(--text-primary);
+}
+
+/* ── Global empty state (no data at all) ─────────────────── */
+.cc-empty-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 55vh;
+    text-align: center;
+    gap: 0.85rem;
+    animation: cc-fade-up 0.5s ease both;
+}
+
+.cc-empty-page-icon {
+    width: 72px; height: 72px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, rgba(139,92,246,0.12), rgba(192,132,252,0.07));
+    border: 1px solid rgba(139,92,246,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+    box-shadow: 0 0 40px rgba(139,92,246,0.1);
+}
+
+.cc-empty-page h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    margin: 0;
+    letter-spacing: -0.01em;
+}
+
+.cc-empty-page p {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    max-width: 320px;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.cc-cta-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin-top: 0.4rem;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, var(--violet), #6d28d9);
+    color: #fff;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 0.92rem;
+    border-radius: 10px;
+    text-decoration: none;
+    transition: all var(--transition);
+    box-shadow: 0 8px 24px rgba(139,92,246,0.35),
+                inset 0 1px 0 rgba(255,255,255,0.12);
+}
+
+.cc-cta-btn:hover {
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 14px 32px rgba(139,92,246,0.5),
+                inset 0 1px 0 rgba(255,255,255,0.15);
+}
+
+/* ── Animations ──────────────────────────────────────────── */
+@@keyframes cc-fade-up {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@@keyframes cc-pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.45; }
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@@media (max-width: 767px) {
+    .cc-catalog-page { padding: 2.5rem 0.85rem 4rem; }
+    .cc-grid         { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .cc-toolbar      { gap: 0.6rem; }
+    .cc-sort-select  { min-width: 160px; }
+    .cc-stats-bar    { gap: 0.65rem; }
+}
+
+@@media (max-width: 500px) {
+    .cc-grid        { grid-template-columns: 1fr; }
+    .cc-search-wrap { min-width: 100%; }
+    .cc-sort-wrap   { width: 100%; }
+    .cc-sort-select { width: 100%; min-width: unset; }
+}
+</style>
+}
+
+<div class="cc-catalog-page">
+    <div class="cc-catalog-inner">
+
+        <div class="cc-page-header">
+            <div class="cc-eyebrow">
+                <span class="cc-eyebrow-dot"></span>
+                Menu Catalog
+            </div>
+            <h1>Every dish, one place.</h1>
+            <p>Browse and search all extracted menu items across every restaurant you've scanned.</p>
+        </div>
+
+        @if (!isEmpty)
+        {
+        int totalItems = Model.Count;
+        int totalRestaurants = Model.Select(x => x.RestaurantName).Distinct().Count();
+        var cheapest = Model.Min(x => x.Price);
+
+        <div class="cc-stats-bar">
+            <div class="cc-stat">
+                <span class="cc-stat-num">@totalItems</span>
+                <span class="cc-stat-label">dishes</span>
+            </div>
+            <div class="cc-stat">
+                <span class="cc-stat-num">@totalRestaurants</span>
+                <span class="cc-stat-label">restaurants</span>
+            </div>
+            <div class="cc-stat">
+                <span class="cc-stat-num">€@cheapest.ToString("0.00")</span>
+                <span class="cc-stat-label">cheapest item</span>
+            </div>
+        </div>
+
+        <div class="cc-toolbar">
+            <div class="cc-search-wrap">
+                <input type="text" id="ccSearch" class="cc-search-input" placeholder="Search..." />
+                <button type="button" class="cc-search-clear" id="ccSearchClear">✕</button>
+            </div>
+
+            <select id="ccSort" class="cc-sort-select">
+                <option value="default">Default</option>
+                <option value="price-asc">Price ↑</option>
+                <option value="price-desc">Price ↓</option>
+                <option value="name-asc">Name A-Z</option>
+            </select>
+
+            <span id="ccResultCount">@totalItems items</span>
+        </div>
+
+        <div class="cc-grid" id="ccGrid">
+            @for (int i = 0; i < Model.Count; i++)
+            {
+            var item = Model[i];
+
+            <div class="cc-item-card"
+                 data-index="@i"
+                 data-name="@((item.Name ?? "").ToLowerInvariant())"
+                 data-restaurant="@((item.RestaurantName ?? "").ToLowerInvariant())"
+                 data-price="@item.Price.ToString(CultureInfo.InvariantCulture)">
+
+                <div class="cc-card-restaurant">
+                    @item.RestaurantName
+                </div>
+
+                <div class="cc-card-name">@item.Name</div>
+
+                <div class="cc-card-footer">
+                        <span class="cc-price-badge">
+                            €@item.Price.ToString("0.00")
+                        </span>
+                </div>
+            </div>
+            }
+
+            <div class="cc-no-results" id="ccNoResults">
+                <h3>No results found</h3>
+                <button id="ccNoClear">Clear</button>
+            </div>
+        </div>
+        }
+        else
+        {
+        <div class="cc-empty-page">
+            <h2>Your catalog is empty</h2>
+            <a href="/menu/upload" class="cc-cta-btn">Upload Menu</a>
+        </div>
+        }
+
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    (function () {
+        const searchInput = document.getElementById('ccSearch');
+        const searchClear = document.getElementById('ccSearchClear');
+        const sortSelect  = document.getElementById('ccSort');
+        const grid        = document.getElementById('ccGrid');
+        const noResults   = document.getElementById('ccNoResults');
+        const noClear     = document.getElementById('ccNoClear');
+        const resultCount = document.getElementById('ccResultCount');
+
+        if (!grid) return;
+
+        const allCards = Array.from(grid.querySelectorAll('.cc-item-card'));
+
+        allCards.forEach(card => {
+            const nameEl = card.querySelector('.cc-card-name');
+            card.dataset.originalName = nameEl.textContent || '';
+        });
+
+        function escapeHtml(str) {
+            return str.replace(/[&<>"']/g, m => ({
+                '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
+            })[m]);
+        }
+
+        function highlight(text, query) {
+            if (!query) return escapeHtml(text);
+            const safe = escapeHtml(text);
+            const q = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return safe.replace(new RegExp('(' + q + ')', 'gi'), '<mark>$1</mark>');
+        }
+
+        function applyFilters() {
+            const q = searchInput.value.trim().toLowerCase();
+            const sort = sortSelect.value;
+
+            let visible = allCards.filter(card => {
+                const name = card.dataset.name;
+                const rest = card.dataset.restaurant;
+                const match = !q || name.includes(q) || rest.includes(q);
+                card.style.display = match ? '' : 'none';
+                return match;
+            });
+
+            allCards.forEach(card => {
+                const el = card.querySelector('.cc-card-name');
+                el.innerHTML = highlight(card.dataset.originalName, q);
+            });
+
+            visible.sort((a, b) => {
+                if (sort === 'price-asc')
+                    return Number(a.dataset.price) - Number(b.dataset.price);
+
+                if (sort === 'price-desc')
+                    return Number(b.dataset.price) - Number(a.dataset.price);
+
+                if (sort === 'name-asc')
+                    return a.dataset.name.localeCompare(b.dataset.name);
+
+                return Number(a.dataset.index) - Number(b.dataset.index);
+            });
+
+            visible.forEach(card => grid.insertBefore(card, noResults));
+
+            noResults.style.display = visible.length ? 'none' : 'block';
+
+            resultCount.textContent = q
+                ? visible.length + " of " + allCards.length
+                : allCards.length + " items";
+
+            searchClear.style.display = q ? 'inline' : 'none';
+        }
+
+        searchInput.addEventListener('input', applyFilters);
+        sortSelect.addEventListener('change', applyFilters);
+
+        searchClear.onclick = () => {
+            searchInput.value = '';
+            applyFilters();
+        };
+
+        noClear.onclick = () => {
+            searchInput.value = '';
+            applyFilters();
+        };
+
+        applyFilters();
+    })();
+</script>
+}

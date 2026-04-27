@@ -1,0 +1,420 @@
+﻿@*
+    CloudCuisine Navbar — Views/Shared/_Navbar.cshtml
+    In _Layout.cshtml, add inside <body> before @RenderBody():
+        <partial name="_Navbar" />
+*@
+
+@{
+var isAuth = User.Identity != null && User.Identity.IsAuthenticated;
+var userName  = isAuth ? (User.Identity!.Name ?? "User") : null;
+var userEmail = isAuth ? (User.FindFirst("email")?.Value ?? "") : null;
+var userPic   = isAuth ? (User.FindFirst("picture")?.Value ?? "") : null;
+var initial   = !string.IsNullOrWhiteSpace(userName)
+? userName!.Substring(0, 1).ToUpper()
+: "U";
+}
+
+<nav class="navbar navbar-expand-lg cc-nav">
+    <div class="container">
+
+        <!-- ── Brand ────────────────────────────── -->
+        <a class="navbar-brand cc-brand" href="/">
+            <span class="cc-brand-mark">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white"
+                     stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17.5 19a4.5 4.5 0 1 0 0-9h-1.8A7 7 0 1 0 4 15.5"/>
+                </svg>
+            </span>
+            CloudCuisine
+        </a>
+
+        <!-- ── Mobile toggler ────────────────────── -->
+        <button class="navbar-toggler cc-toggler" type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#ccNavCollapse"
+                aria-controls="ccNavCollapse"
+                aria-expanded="false"
+                aria-label="Toggle navigation">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="3" y1="6"  x2="21" y2="6"/>
+                <line x1="3" y1="12" x2="21" y2="12"/>
+                <line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+        </button>
+
+        <!-- ── Collapsible nav ───────────────────── -->
+        <div class="collapse navbar-collapse" id="ccNavCollapse">
+            <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
+
+                <li class="nav-item">
+                    <a class="nav-link cc-nav-link" href="/#features">Features</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link cc-nav-link" href="/#how">How it works</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link cc-nav-link" href="/catalog">Catalog</a>
+                </li>
+
+                @if (isAuth)
+                {
+                <!-- Logged-in: profile pill + dropdown -->
+                <li class="nav-item dropdown cc-profile-item">
+
+                    <button class="cc-profile-btn dropdown-toggle"
+                            type="button"
+                            id="ccProfileDropdown"
+                            data-bs-toggle="dropdown"
+                            data-bs-display="static"
+                            aria-expanded="false">
+
+                        @if (!string.IsNullOrEmpty(userPic))
+                        {
+                        <img src="@userPic"
+                             alt="@userName"
+                             class="cc-avatar"
+                             referrerpolicy="no-referrer"
+                             onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex';" />
+                        <span class="cc-avatar cc-avatar-fallback" style="display:none;">@initial</span>
+                        }
+                        else
+                        {
+                        <span class="cc-avatar cc-avatar-fallback">@initial</span>
+                        }
+
+                        <span class="cc-profile-name">@userName</span>
+
+                        <svg class="cc-chevron" width="14" height="14" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2.5"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </button>
+
+                    <ul class="dropdown-menu dropdown-menu-end cc-dropdown"
+                        aria-labelledby="ccProfileDropdown">
+
+                        <li class="cc-dd-header">
+                            <p class="cc-dd-name">@userName</p>
+                            @if (!string.IsNullOrEmpty(userEmail))
+                            {
+                            <p class="cc-dd-email">@userEmail</p>
+                            }
+                        </li>
+
+                        <li><hr class="cc-dd-divider"></li>
+
+                        <li>
+                            <a class="cc-dd-item" href="/menu/upload">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                     stroke="currentColor" stroke-width="2"
+                                     stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                    <polyline points="17 8 12 3 7 8"/>
+                                    <line x1="12" y1="3" x2="12" y2="15"/>
+                                </svg>
+                                Upload Menu
+                            </a>
+                        </li>
+                        <li>
+                            <a class="cc-dd-item" href="/catalog">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                     stroke="currentColor" stroke-width="2"
+                                     stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                                </svg>
+                                Catalog
+                            </a>
+                        </li>
+
+                        <li><hr class="cc-dd-divider"></li>
+
+                        <li>
+                            <a class="cc-dd-item cc-dd-danger" href="/auth/logout">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                     stroke="currentColor" stroke-width="2"
+                                     stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                                    <polyline points="16 17 21 12 16 7"/>
+                                    <line x1="21" y1="12" x2="9" y2="12"/>
+                                </svg>
+                                Sign out
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                }
+                else
+                {
+                <!-- Guest: sign-in button -->
+                <li class="nav-item cc-signin-item">
+                    <a href="/auth/login" class="cc-signin-btn">
+                        <svg width="15" height="15" viewBox="0 0 48 48"
+                             xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
+                            <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/>
+                            <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/>
+                            <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/>
+                            <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/>
+                        </svg>
+                        Sign in with Google
+                    </a>
+                </li>
+                }
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<style>
+    /* ── Navbar shell ───────────────────────────────── */
+    .cc-nav {
+        background: rgba(26, 15, 46, 0.75);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-bottom: 1px solid rgba(139, 92, 246, 0.15);
+        padding-top: 0.8rem;
+        padding-bottom: 0.8rem;
+        position: sticky;
+        top: 0;
+        z-index: 1030;
+    }
+
+    /* ── Brand ──────────────────────────────────────── */
+    .cc-brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        font-size: 1.2rem;
+        color: #f5f3ff !important;
+        text-decoration: none !important;
+        letter-spacing: -0.01em;
+        padding: 0;
+    }
+    .cc-brand-mark {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #8b5cf6 0%, #c084fc 100%);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 14px rgba(139, 92, 246, 0.45);
+        flex-shrink: 0;
+    }
+
+    /* ── Mobile toggler ─────────────────────────────── */
+    .cc-toggler {
+        background: rgba(139, 92, 246, 0.1) !important;
+        border: 1px solid rgba(139, 92, 246, 0.3) !important;
+        color: #c4b8e0 !important;
+        padding: 0.4rem 0.55rem;
+        border-radius: 8px;
+        transition: all 0.2s;
+    }
+    .cc-toggler:hover,
+    .cc-toggler:focus {
+        background: rgba(139, 92, 246, 0.2) !important;
+        color: #f5f3ff !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }
+
+    /* ── Nav links ──────────────────────────────────── */
+    .cc-nav-link {
+        color: #c4b8e0 !important;
+        font-size: 0.92rem;
+        font-weight: 500;
+        padding: 0.5rem 0.9rem !important;
+        border-radius: 8px;
+        transition: all 0.18s ease;
+    }
+    .cc-nav-link:hover {
+        color: #f5f3ff !important;
+        background: rgba(139, 92, 246, 0.12);
+    }
+
+    /* ── Sign-in button (guest) ─────────────────────── */
+    .cc-signin-item { margin-left: 0.5rem; }
+    .cc-signin-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.52rem 1.1rem;
+        background: #ffffff;
+        color: #1a0f2e;
+        font-size: 0.88rem;
+        font-weight: 600;
+        border-radius: 9px;
+        text-decoration: none !important;
+        white-space: nowrap;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 12px rgba(255,255,255,0.08);
+    }
+    .cc-signin-btn:hover {
+        color: #1a0f2e;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(255,255,255,0.16);
+    }
+
+    /* ── Profile pill (logged-in) ───────────────────── */
+    .cc-profile-item { margin-left: 0.5rem; }
+    .cc-profile-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.3rem 0.75rem 0.3rem 0.3rem;
+        background: rgba(139, 92, 246, 0.1);
+        border: 1px solid rgba(139, 92, 246, 0.28);
+        border-radius: 100px;
+        color: #f5f3ff;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        /* Reset browser button defaults */
+        outline: none;
+        box-shadow: none;
+    }
+    .cc-profile-btn:hover,
+    .cc-profile-btn[aria-expanded="true"] {
+        background: rgba(139, 92, 246, 0.22);
+        border-color: rgba(139, 92, 246, 0.5);
+        color: #f5f3ff;
+    }
+    /* Kill Bootstrap's auto-generated caret */
+    .cc-profile-btn.dropdown-toggle::after { display: none !important; }
+
+    /* ── Avatar ─────────────────────────────────────── */
+    .cc-avatar {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1.5px solid rgba(192, 132, 252, 0.45);
+        flex-shrink: 0;
+    }
+    .cc-avatar-fallback {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #8b5cf6, #c084fc);
+        color: #fff;
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 600;
+        font-size: 0.82rem;
+        text-transform: uppercase;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        border: 1.5px solid rgba(192, 132, 252, 0.45);
+    }
+    .cc-profile-name {
+        font-size: 0.87rem;
+        font-weight: 500;
+        color: #f5f3ff;
+        max-width: 130px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .cc-chevron {
+        color: #a78bfa;
+        flex-shrink: 0;
+        transition: transform 0.2s ease;
+    }
+    .cc-profile-btn[aria-expanded="true"] .cc-chevron {
+        transform: rotate(180deg);
+    }
+
+    /* ── Dropdown ───────────────────────────────────── */
+    .cc-dropdown.dropdown-menu {
+        min-width: 250px;
+        padding: 0.45rem;
+        margin-top: 0.65rem !important;
+        background: rgba(24, 13, 50, 0.98);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(139, 92, 246, 0.22);
+        border-radius: 12px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.55);
+        animation: ccDropIn 0.16s ease-out;
+    }
+    @@keyframes ccDropIn {
+        from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+        to   { opacity: 1; transform: translateY(0)   scale(1); }
+    }
+    .cc-dd-header {
+        padding: 0.55rem 0.8rem 0.35rem;
+    }
+    .cc-dd-name {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 600;
+        font-size: 0.93rem;
+        color: #f5f3ff;
+        margin: 0 0 0.15rem;
+        word-break: break-word;
+    }
+    .cc-dd-email {
+        font-size: 0.78rem;
+        color: #7c72a0;
+        margin: 0;
+        word-break: break-all;
+    }
+    .cc-dd-divider {
+        margin: 0.4rem 0;
+        border-color: rgba(139, 92, 246, 0.18);
+        opacity: 1;
+    }
+    .cc-dd-item {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        padding: 0.52rem 0.8rem;
+        color: #c4b8e0;
+        font-size: 0.88rem;
+        font-weight: 500;
+        border-radius: 8px;
+        text-decoration: none !important;
+        transition: all 0.15s ease;
+    }
+    .cc-dd-item svg { color: #9d7fe8; flex-shrink: 0; }
+    .cc-dd-item:hover,
+    .cc-dd-item:focus {
+        background: rgba(139, 92, 246, 0.16);
+        color: #f5f3ff;
+    }
+    .cc-dd-danger { color: #f0abab; }
+    .cc-dd-danger svg { color: #f0abab; }
+    .cc-dd-danger:hover,
+    .cc-dd-danger:focus {
+        background: rgba(248, 113, 113, 0.12);
+        color: #fecaca;
+    }
+
+    /* ── Mobile collapse ────────────────────────────── */
+    @@media (max-width: 991.98px) {
+    .cc-nav-link {
+        padding: 0.65rem 0.9rem !important;
+        display: block;
+    }
+    .cc-signin-item  { margin-left: 0; margin-top: 0.5rem; }
+    .cc-signin-btn   { width: 100%; justify-content: center; }
+    .cc-profile-item { margin-left: 0; margin-top: 0.5rem; }
+    .cc-profile-btn  {
+        width: 100%;
+        border-radius: 10px;
+        padding: 0.55rem 0.85rem 0.55rem 0.55rem;
+    }
+    .cc-profile-name { max-width: none; flex: 1; }
+    .cc-dropdown.dropdown-menu {
+        width: 100%;
+        margin-top: 0.4rem !important;
+        position: static !important;
+        transform: none !important;
+        box-shadow: none;
+    }
+    }
+</style>
