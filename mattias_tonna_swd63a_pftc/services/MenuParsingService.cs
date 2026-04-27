@@ -1,5 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using mattias_tonna_swd63a_pftc.Models;
+using System.Globalization;
 
 namespace mattias_tonna_swd63a_pftc.services;
 
@@ -17,20 +18,20 @@ public class MenuParsingService
 
         for (int i = 0; i < lines.Count; i++)
         {
-            var priceMatch = System.Text.RegularExpressions.Regex.Match(lines[i], @"€\s?(\d+[.,]\d{2})");
+            var priceMatch = Regex.Match(lines[i], @"[€£]\s?(\d+[.,]\d{2})");
 
             if (!priceMatch.Success)
                 continue;
 
             var priceText = priceMatch.Groups[1].Value.Replace(",", ".");
-            var price = decimal.Parse(priceText, System.Globalization.CultureInfo.InvariantCulture);
+            var price = Convert.ToDouble(priceText, CultureInfo.InvariantCulture);
 
             var possibleName = lines[i].Replace(priceMatch.Value, "").Trim();
 
             if (string.IsNullOrWhiteSpace(possibleName) && i > 0)
                 possibleName = lines[i - 1].Trim();
             
-            if (Regex.IsMatch(possibleName, @"^€?\d+[.,]\d{2}$"))
+            if (Regex.IsMatch(possibleName, @"^[€£]?\d+[.,]\d{2}$"))
                 continue;
 
             if (possibleName.Length < 3)

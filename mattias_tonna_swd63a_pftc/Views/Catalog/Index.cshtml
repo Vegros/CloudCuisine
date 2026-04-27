@@ -579,6 +579,13 @@ body {
             <p>Browse and search all extracted menu items across every restaurant you've scanned.</p>
         </div>
 
+        @if (ViewBag.PendingCount > 0)
+        {
+            <div class="alert alert-info">
+                @ViewBag.PendingCount menu(s) are still processing OCR. Refresh in a few seconds.
+            </div>
+        }
+        
         @if (!isEmpty)
         {
         int totalItems = Model.Count;
@@ -747,5 +754,56 @@ body {
 
         applyFilters();
     })();
+    const pendingBanner = document.querySelector('.alert.alert-info');
+
+    if (pendingBanner) {
+        const pollCatalog = async () => {
+            try {
+                const response = await fetch(window.location.href, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+
+                const html = await response.text();
+                const parser = new DOMParser();
+                const nextDocument = parser.parseFromString(html, 'text/html');
+
+                const nextPendingBanner = nextDocument.querySelector('.alert.alert-info');
+                const nextGrid = nextDocument.querySelector('#ccGrid');
+                const currentGrid = document.querySelector('#ccGrid');
+                const currentEmpty = document.querySelector('.cc-empty-page');
+                const nextEmpty = nextDocument.querySelector('.cc-empty-page');
+
+                if (!nextPendingBanner) {
+                    const currentInner = document.querySelector('.cc-catalog-inner');
+                    const nextInner = nextDocument.querySelector('.cc-catalog-inner');
+
+                    if (currentInner && nextInner) {
+                        currentInner.innerHTML = nextInner.innerHTML;
+                    }
+
+                    clearInterval(catalogPollInterval);
+                    return;
+                }
+
+                if (currentGrid && nextGrid) {
+                    currentGrid.innerHTML = nextGrid.innerHTML;
+                }
+
+                if (currentEmpty && !nextEmpty) {
+                    const currentInner = document.querySelector('.cc-catalog-inner');
+                    const nextInner = nextDocument.querySelector('.cc-catalog-inner');
+
+                    if (currentInner && nextInner) {
+                        currentInner.innerHTML = nextInner.innerHTML;
+                    }
+                }
+            } catch (error) {
+                console.warn('Catalog polling failed:', error);
+            }
+        };
+
+        const catalogPollInterval = setInterval(pollCatalog, 5000);
+    }
+    
 </script>
 }

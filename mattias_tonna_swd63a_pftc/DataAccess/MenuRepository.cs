@@ -111,14 +111,17 @@ public class MenuRepository
 
         foreach (var restaurantDoc in restaurantsSnapshot.Documents)
         {
-            var restaurant = restaurantDoc.ConvertTo<Restaurant>();
-
             var menusSnapshot = await restaurantDoc.Reference
                 .Collection("menus")
                 .GetSnapshotAsync();
 
             foreach (var menuDoc in menusSnapshot.Documents)
             {
+                var menu = menuDoc.ConvertTo<Menu>();
+
+                if (menu.Status != "completed")
+                    continue;
+
                 var itemsSnapshot = await menuDoc.Reference
                     .Collection("items")
                     .GetSnapshotAsync();
@@ -126,17 +129,41 @@ public class MenuRepository
                 foreach (var itemDoc in itemsSnapshot.Documents)
                 {
                     var item = itemDoc.ConvertTo<MenuItem>();
-
+                    var restaurant = restaurantDoc.ConvertTo<Restaurant>();
+                    
                     results.Add(new CatalogItem
                     {
                         Name = item.Name,
                         Price = item.Price,
-                        RestaurantName = restaurant.Name
+                        RestaurantName = restaurant.Name,
                     });
                 }
             }
         }
 
         return results;
+    }
+    
+    public async Task<int> GetPendingMenuCountAsync()
+    {
+        var pendingCount = 0;
+        var restaurantsSnapshot = await _db.Collection("restaurants").GetSnapshotAsync();
+
+        foreach (var restaurantDoc in restaurantsSnapshot.Documents)
+        {
+            var menusSnapshot = await restaurantDoc.Reference
+                .Collection("menus")
+                .GetSnapshotAsync();
+
+            foreach (var menuDoc in menusSnapshot.Documents)
+            {
+                var menu = menuDoc.ConvertTo<Menu>();
+
+                if (menu.Status == "pending")
+                    pendingCount++;
+            }
+        }
+
+        return pendingCount;
     }
 }

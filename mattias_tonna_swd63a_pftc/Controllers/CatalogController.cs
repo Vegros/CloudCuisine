@@ -17,6 +17,7 @@ public class CatalogController : Controller
     public async Task<IActionResult> Index()
     {
         var items = await _menuRepository.GetCatalogItemsAsync();
+        ViewBag.PendingCount = await _menuRepository.GetPendingMenuCountAsync();
         return View(items);
     }
 }

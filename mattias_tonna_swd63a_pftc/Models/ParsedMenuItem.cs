@@ -3,5 +3,5 @@
 public class ParsedMenuItem
 {
     public string Name { get; set; } = "";
-    public decimal Price { get; set; }
+    public double Price { get; set; }
 }
