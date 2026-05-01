@@ -136,6 +136,7 @@ public class MenuRepository
                         Name = item.Name,
                         Price = item.Price,
                         RestaurantName = restaurant.Name,
+                        RestaurantId = restaurant.RestaurantId
                     });
                 }
             }

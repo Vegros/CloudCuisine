@@ -6,4 +6,6 @@ public class CatalogItem
 
     public double Price { get; set; }
     public string RestaurantName { get; set; } = "";
+    public string RestaurantId { get; set; } = "";
+    
 }

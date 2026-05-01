@@ -774,6 +774,7 @@ body {
                          data-index="@i"
                          data-name="@((item.Name ?? "").ToLowerInvariant())"
                          data-restaurant="@((item.RestaurantName ?? "").ToLowerInvariant())"
+                         data-restaurant-id="@item.RestaurantId"
                          data-price="@item.Price.ToString(CultureInfo.InvariantCulture)">
 
                         <div class="cc-card-restaurant">@item.RestaurantName</div>
@@ -947,7 +948,7 @@ body {
         return fetch(TRANSLATE_URL, {
             method:  'POST',
             headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify({ text: text, target: target })
+            body:    JSON.stringify({ text: text, target: target, restaurantId: document.querySelector('.cc-item-card')?.dataset.restaurantId || "global"})
         })
         .then(function (res) {
             if (!res.ok) throw new Error('HTTP ' + res.status);

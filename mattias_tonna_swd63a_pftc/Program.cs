@@ -9,6 +9,16 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+Environment.SetEnvironmentVariable(
+    "GOOGLE_APPLICATION_CREDENTIALS",
+    builder.Configuration["Authentication:Google:CredentialsPath"]
+);
+
+var secretManager = new GoogleSecretManagerService(builder.Configuration["Authentication:Google:ProjectId"],
+    builder.Services.BuildServiceProvider().GetRequiredService<ILogger<GoogleSecretManagerService>>());
+await secretManager.LoadSecretsIntoConfigurationAsync(builder.Configuration);
+
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -44,6 +54,7 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddControllersWithViews();
 
+builder.Services.AddHttpClient();
 builder.Services.AddScoped<MenuParsingService>();
 builder.Services.AddScoped<VisionOcrService>();
 builder.Services.AddScoped<MenuRepository>();
