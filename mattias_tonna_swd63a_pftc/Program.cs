@@ -4,15 +4,18 @@ using mattias_tonna_swd63a_pftc.interfaces;
 using mattias_tonna_swd63a_pftc.services;
 using Microsoft.AspNetCore.Authentication.Cookies; 
 using Microsoft.AspNetCore.Authentication.Google; 
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-Environment.SetEnvironmentVariable(
-    "GOOGLE_APPLICATION_CREDENTIALS",
-    builder.Configuration["Authentication:Google:CredentialsPath"]
-);
+var credentialsPath = builder.Configuration["Authentication:Google:CredentialsPath"];
+
+if (!string.IsNullOrWhiteSpace(credentialsPath))
+{
+    Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", credentialsPath);
+}
 
 var secretManager = new GoogleSecretManagerService(builder.Configuration["Authentication:Google:ProjectId"],
     builder.Services.BuildServiceProvider().GetRequiredService<ILogger<GoogleSecretManagerService>>());
@@ -55,8 +58,6 @@ builder.Services.AddAuthorization();
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddHttpClient();
-builder.Services.AddScoped<MenuParsingService>();
-builder.Services.AddScoped<VisionOcrService>();
 builder.Services.AddScoped<MenuRepository>();
 builder.Services.AddScoped<PubSubService>();
 builder.Services.AddScoped<IBucketStorageService, BucketStorageService>();
@@ -72,6 +73,10 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedFor
+});
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();

@@ -12,15 +12,23 @@ public class MenuRepository
     public MenuRepository(ILogger<MenuRepository> logger, IConfiguration config)
     {
         _logger = logger;
+
         var projectId = config["Authentication:Google:ProjectId"];
+        var databaseId = config["Storage:Google:DatabaseId"];
         var credentialsPath = config["Authentication:Google:CredentialsPath"];
 
-        _db = new FirestoreDbBuilder
+        var firestoreBuilder = new FirestoreDbBuilder
         {
             ProjectId = projectId,
-            DatabaseId = config["Storage:Google:DatabaseId"],
-            Credential = GoogleCredential.FromFile(credentialsPath)
-        }.Build();
+            DatabaseId = databaseId
+        };
+
+        if (!string.IsNullOrWhiteSpace(credentialsPath))
+        {
+            firestoreBuilder.Credential = GoogleCredential.FromFile(credentialsPath);
+        }
+
+        _db = firestoreBuilder.Build();
     }
 
     public async Task<MenuUploadResult> SaveMenuUploadAsync(
@@ -119,7 +127,7 @@ public class MenuRepository
             {
                 var menu = menuDoc.ConvertTo<Menu>();
 
-                if (menu.Status != "completed")
+                if (menu.Status != "ready")
                     continue;
 
                 var itemsSnapshot = await menuDoc.Reference

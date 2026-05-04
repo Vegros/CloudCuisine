@@ -14,13 +14,14 @@ public class BucketStorageService:IBucketStorageService
     {
         _logger = logger;
         _bucketName = config.GetValue<string>("Storage:Google:BucketName");
-        
-        var credentialsPath = config.GetValue<string>("Authentication:Google:CredentialsPath");
 
-        _storageClient = new StorageClientBuilder
+        var credentialsPath = config.GetValue<string>("Authentication:Google:CredentialsPath");
+        var storageBuilder = new StorageClientBuilder();
+        if (!string.IsNullOrWhiteSpace(credentialsPath))
         {
-            Credential = GoogleCredential.FromFile(credentialsPath)
-        }.Build();
+            storageBuilder.Credential = GoogleCredential.FromFile(credentialsPath);
+        }
+        _storageClient = storageBuilder.Build();
     }
 
     public async Task<string> UploadFileAsync(IFormFile file, string fileNameForStorage)

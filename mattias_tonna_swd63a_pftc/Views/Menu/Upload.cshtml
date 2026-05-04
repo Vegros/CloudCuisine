@@ -1026,10 +1026,6 @@ body {
 
     <!-- Header -->
     <div class="cc-upload-header">
-        <div class="cc-upload-eyebrow">
-            <span class="dot"></span>
-            Cloud Storage Upload
-        </div>
         <h1>Upload Menu</h1>
         <p>Snap or select a restaurant menu photo — CloudCuisine will extract every dish and price automatically.</p>
     </div>
@@ -1287,64 +1283,82 @@ body {
 @section Scripts {
 <script>
 (function () {
-    const fileInput   = document.getElementById('ccFileInput');
-    const dropzone    = document.getElementById('ccDropzone');
-    const fileBar     = document.getElementById('ccFileBar');
-    const fileName    = document.getElementById('ccFileName');
-    const clearBtn    = document.getElementById('ccClearBtn');
-    const previewWrap = document.getElementById('ccPreviewWrap');
-    const previewImg  = document.getElementById('ccPreviewImg');
-    const submitBtn   = document.getElementById('ccSubmitBtn');
-    const form        = document.getElementById('ccUploadForm');
+    'use strict';
 
-    /* ── File selection handler ── */
+    /* ── Element refs ── */
+    var fileInput       = document.getElementById('ccFileInput');
+    var dropzone        = document.getElementById('ccDropzone');
+    var fileBar         = document.getElementById('ccFileBar');
+    var fileName        = document.getElementById('ccFileName');
+    var clearBtn        = document.getElementById('ccClearBtn');
+    var submitBtn       = document.getElementById('ccSubmitBtn');
+    var form            = document.getElementById('ccUploadForm');
+    var restaurantInput = document.getElementById('restaurantName');
+    var progressWrap    = document.getElementById('ccProgressWrap');
+    var progressBar     = document.getElementById('ccProgressBar');
+    var progressText    = document.getElementById('ccProgressText');
+    var progressLabel   = document.getElementById('ccProgressLabel');
+
+    /* previewWrap/previewImg may not exist in the DOM — guard every access */
+    var previewWrap = document.getElementById('ccPreviewWrap');
+    var previewImg  = document.getElementById('ccPreviewImg');
+
+    /* ════════════════════════════════════════
+       FILE HANDLING
+    ════════════════════════════════════════ */
+
+    /* handleFiles: accepts a FileList of 1 or more files */
     function handleFiles(files) {
         if (!files || files.length === 0) return;
 
+        /* Name bar: one filename or "X files selected" */
         fileName.textContent = files.length === 1
             ? files[0].name
-            : `${files.length} files selected`;
-        
+            : files.length + ' files selected';
         fileBar.classList.add('cc-visible');
 
-        // Image preview
-        if (file.type.startsWith('image/')) {
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                previewImg.src = e.target.result;
-                previewWrap.classList.add('cc-visible');
-            };
-            reader.readAsDataURL(file);
-        } else {
-            previewWrap.classList.remove('cc-visible');
-            previewImg.src = '';
+        /* Preview only when the element exists and exactly one image is picked */
+        if (previewWrap && previewImg) {
+            if (files.length === 1 && files[0].type.startsWith('image/')) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    previewImg.src = e.target.result;
+                    previewWrap.classList.add('cc-visible');
+                };
+                reader.readAsDataURL(files[0]);
+            } else {
+                previewWrap.classList.remove('cc-visible');
+                previewImg.src = '';
+            }
         }
     }
 
-    /* ── Clear selection ── */
     function clearSelection() {
         fileInput.value = '';
         fileBar.classList.remove('cc-visible');
-        previewWrap.classList.remove('cc-visible');
-        previewImg.src = '';
         fileName.textContent = 'No file selected';
+        if (previewWrap) previewWrap.classList.remove('cc-visible');
+        if (previewImg)  previewImg.src = '';
     }
-    
+
+    /* File picker */
     fileInput.addEventListener('change', function () {
         handleFiles(this.files);
     });
 
     clearBtn.addEventListener('click', clearSelection);
 
-    /* ── Drag-and-drop ── */
-    ;['dragenter', 'dragover'].forEach(function (evt) {
+    /* ════════════════════════════════════════
+       DRAG AND DROP (multiple files)
+    ════════════════════════════════════════ */
+    ['dragenter', 'dragover'].forEach(function (evt) {
         dropzone.addEventListener(evt, function (e) {
             e.preventDefault();
             dropzone.classList.add('cc-dragover');
         });
     });
 
-    ;['dragleave', 'drop'].forEach(function (evt) {
+    ['dragleave', 'drop'].forEach(function (evt) {
         dropzone.addEventListener(evt, function (e) {
             e.preventDefault();
             dropzone.classList.remove('cc-dragover');
@@ -1352,58 +1366,60 @@ body {
     });
 
     dropzone.addEventListener('drop', function (e) {
-        const files = e.dataTransfer.files;
-        if (file) {
-            // Assign to the real input so the form picks it up
-            const dt = new DataTransfer();
-            dt.items.add(file);
-            fileInput.files = dt.files;
-            handleFile(file);
+        var droppedFiles = e.dataTransfer.files;
+        if (!droppedFiles || droppedFiles.length === 0) return;
+
+        /* Assign all dropped files into the real <input> via DataTransfer */
+        var dt = new DataTransfer();
+        for (var i = 0; i < droppedFiles.length; i++) {
+            dt.items.add(droppedFiles[i]);
         }
+        fileInput.files = dt.files;
+
+        handleFiles(fileInput.files);
     });
 
-    const restaurantInput = document.getElementById('restaurantName');
-
-    const progressWrap = document.getElementById('ccProgressWrap');
-    const progressBar = document.getElementById('ccProgressBar');
-    const progressText = document.getElementById('ccProgressText');
-    const progressLabel = document.getElementById('ccProgressLabel');
-
+    /* ════════════════════════════════════════
+       XHR SUBMIT WITH REAL UPLOAD PROGRESS
+    ════════════════════════════════════════ */
     form.addEventListener('submit', function (e) {
         e.preventDefault();
 
-        if (!fileInput.files || fileInput.files.length === 0 || !restaurantInput.value.trim()) {
-            return;
-        }
+        /* Validate */
+        if (!fileInput.files || fileInput.files.length === 0) return;
+        if (!restaurantInput || !restaurantInput.value.trim()) return;
 
-        const formData = new FormData();
+        /* Build FormData — all files appended under the key "files" */
+        var formData = new FormData();
         formData.append('restaurantName', restaurantInput.value.trim());
-
-        for (const file of fileInput.files) {
-            formData.append('files', file);
+        for (var i = 0; i < fileInput.files.length; i++) {
+            formData.append('files', fileInput.files[i]);
         }
 
+        /* Lock UI */
         submitBtn.classList.add('cc-loading');
         submitBtn.disabled = true;
+        var btnIcon = submitBtn.querySelector('.cc-btn-icon');
+        if (btnIcon) btnIcon.style.display = 'none';
 
+        /* Show progress */
         progressWrap.classList.add('cc-visible');
         progressBar.style.width = '0%';
         progressText.textContent = '0%';
-        progressLabel.textContent = 'Uploading files...';
+        progressLabel.textContent = 'Uploading files…';
 
-        const xhr = new XMLHttpRequest();
+        var xhr = new XMLHttpRequest();
         xhr.open('POST', form.action || '/Menu/Upload', true);
 
+        /* onprogress fires for the full multi-file request body, not per file */
         xhr.upload.onprogress = function (event) {
             if (!event.lengthComputable) return;
-
-            const percent = Math.round((event.loaded / event.total) * 100);
-            progressBar.style.width = percent + '%';
-            progressText.textContent = percent + '%';
-
-            if (percent >= 100) {
-                progressText.textContent = "Uploaded";
-                progressLabel.textContent = "Processing image, OCR, and Firestore...";
+            var pct = Math.round((event.loaded / event.total) * 100);
+            progressBar.style.width = pct + '%';
+            progressText.textContent = pct + '%';
+            if (pct >= 100) {
+                progressText.textContent = 'Uploaded';
+                progressLabel.textContent = 'Processing OCR and saving to Firestore…';
             }
         };
 
@@ -1411,30 +1427,34 @@ body {
             if (xhr.status >= 200 && xhr.status < 300) {
                 progressBar.style.width = '100%';
                 progressText.textContent = '100%';
-                progressLabel.textContent = 'Complete. Refreshing...';
-
+                progressLabel.textContent = 'Complete. Loading results…';
+                /* Replace the whole page with the server-rendered response */
                 document.open();
                 document.write(xhr.responseText);
                 document.close();
             } else {
-                progressLabel.textContent = 'Upload failed.';
+                progressLabel.textContent = 'Upload failed (HTTP ' + xhr.status + '). Please try again.';
                 submitBtn.classList.remove('cc-loading');
                 submitBtn.disabled = false;
+                if (btnIcon) btnIcon.style.display = '';
             }
         };
 
         xhr.onerror = function () {
-            progressLabel.textContent = 'Upload failed.';
+            progressLabel.textContent = 'Network error. Please try again.';
             submitBtn.classList.remove('cc-loading');
             submitBtn.disabled = false;
+            if (btnIcon) btnIcon.style.display = '';
         };
 
         xhr.send(formData);
     });
 
-    /* ── Copy URL button ── */
-    const copyBtn   = document.getElementById('ccCopyBtn');
-    const resultUrl = document.getElementById('ccResultUrl');
+    /* ════════════════════════════════════════
+       COPY URL BUTTON
+    ════════════════════════════════════════ */
+    var copyBtn   = document.getElementById('ccCopyBtn');
+    var resultUrl = document.getElementById('ccResultUrl');
 
     if (copyBtn && resultUrl) {
         copyBtn.addEventListener('click', function () {
@@ -1443,12 +1463,7 @@ body {
                 copyBtn.style.color = '#4ade80';
                 copyBtn.style.borderColor = 'rgba(74,222,128,0.4)';
                 setTimeout(function () {
-                    copyBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2.2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                    </svg> Copy`;
+                    copyBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy';
                     copyBtn.style.color = '';
                     copyBtn.style.borderColor = '';
                 }, 2000);
@@ -1456,35 +1471,38 @@ body {
         });
     }
 
-    /* ── OCR collapse toggle ── */
-    const ocrToggle = document.getElementById('ccOcrToggle');
-    const ocrBody   = document.getElementById('ccOcrBody');
+    /* ════════════════════════════════════════
+       OCR COLLAPSE TOGGLE
+    ════════════════════════════════════════ */
+    var ocrToggle  = document.getElementById('ccOcrToggle');
+    var ocrBody    = document.getElementById('ccOcrBody');
+    var toggleText = document.getElementById('toggle-text');
 
     if (ocrToggle && ocrBody) {
         ocrToggle.addEventListener('click', function () {
-            const open = ocrBody.style.display !== 'none';
-            ocrBody.style.display   = open ? 'none' : 'block';
+            var open = ocrBody.style.display !== 'none';
+            ocrBody.style.display = open ? 'none' : 'block';
             ocrToggle.setAttribute('aria-expanded', String(!open));
-            ocrToggle.childNodes.forEach(function(n) {
-                if (n.nodeType === Node.TEXT_NODE) {
-                    document.getElementById('toggle-text').textContent = open ? 'Show' : 'Hide';
-                }
-            });
+            if (toggleText) toggleText.textContent = open ? 'Show' : 'Hide';
         });
     }
 
-    /* ── Debug / storage URL collapse ── */
-    const debugTrigger = document.getElementById('ccDebugTrigger');
-    const debugBody    = document.getElementById('ccDebugBody');
+    /* ════════════════════════════════════════
+       DEBUG / STORAGE URL COLLAPSE
+    ════════════════════════════════════════ */
+    var debugTrigger = document.getElementById('ccDebugTrigger');
+    var debugBody    = document.getElementById('ccDebugBody');
 
     if (debugTrigger && debugBody) {
         debugTrigger.addEventListener('click', function () {
-            const open = debugBody.style.display !== 'none';
+            var open = debugBody.style.display !== 'none';
             debugBody.style.display = open ? 'none' : 'block';
             debugTrigger.setAttribute('aria-expanded', String(!open));
         });
     }
-    document.getElementById('restaurantName')?.focus();
+
+    /* ── Auto-focus restaurant name on load ── */
+    if (restaurantInput) restaurantInput.focus();
 
 }());
 </script>
