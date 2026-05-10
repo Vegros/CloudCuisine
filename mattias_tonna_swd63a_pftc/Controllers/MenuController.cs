@@ -6,7 +6,9 @@ using mattias_tonna_swd63a_pftc.Models;
 using mattias_tonna_swd63a_pftc.services;
 using System.Net.Http;
 using System.Net.Http.Json;
+using Google.Apis.Auth.OAuth2;
 
+using System.Net.Http.Headers;
 namespace mattias_tonna_swd63a_pftc.Controllers;
 
 
@@ -79,12 +81,35 @@ public class MenuController : Controller
                 
                 try
                 {
-                    var response = await _httpClient.PostAsJsonAsync(
-                        "https://translate-248102223811.europe-west1.run.app/clear_cache",
-                        new { restaurantId = uploadResult.RestaurantId }
+                    var clearCacheUrl = "https://translate-248102223811.europe-west1.run.app/clear_cache";
+
+                    var credential = await GoogleCredential.GetApplicationDefaultAsync();
+
+                    var oidcToken = await credential.GetOidcTokenAsync(
+                        OidcTokenOptions.FromTargetAudience("https://translate-248102223811.europe-west1.run.app")
                     );
 
+                    var token = await oidcToken.GetAccessTokenAsync();
+
+                    var request = new HttpRequestMessage(HttpMethod.Post, clearCacheUrl)
+                    {
+                        Content = JsonContent.Create(new
+                        {
+                            restaurantId = uploadResult.RestaurantId
+                        })
+                    };
+
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                    var response = await _httpClient.SendAsync(request);
+
                     _logger.LogInformation("Cache clear response: {StatusCode}", response.StatusCode);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        var body = await response.Content.ReadAsStringAsync();
+                        _logger.LogWarning("Cache clear failed: {StatusCode} {Body}", response.StatusCode, body);
+                    }
                 }
                 catch (Exception cacheEx)
                 {
