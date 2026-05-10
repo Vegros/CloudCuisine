@@ -162,7 +162,7 @@ def clean_pending_menus(request):
             processed_restaurants += 1
 
     return ({
-                "processedRestaurants": processed_restaurants,
-                "processedMenus": processed_menus,
-                "createdItems": total_items
-            }, 200)
+        "processedRestaurants": processed_restaurants,
+        "processedMenus": processed_menus,
+        "createdItems": total_items
+    }, 200)
